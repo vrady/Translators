@@ -1,4 +1,4 @@
-program lab var int a,b
+program lab var int a
 real x{Read(x)
 a=(2+2)*3
 for b=(1-1)-1 by 2 to 6 do a=a+1 rof
