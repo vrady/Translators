@@ -10,14 +10,13 @@ import java.util.*;
 public class GrammarTree {
 
     private LinkedHashMap<String, String[][]> grammarMap;
-    private LinkedHashSet<String> nonterimalLexemesSet;
+    private LinkedHashSet<String> terminalLexemesSet;
 
     public GrammarTree(String grammarFileName) throws FileNotFoundException {
         grammarMap = new LinkedHashMap<>();
-        nonterimalLexemesSet = new LinkedHashSet<>();
+        terminalLexemesSet = new LinkedHashSet<>();
         parseGrammarLexemesFile(grammarFileName);
     }
-
 
 
     private void parseGrammarLexemesFile(String grammarFileName) throws FileNotFoundException {
@@ -27,7 +26,7 @@ public class GrammarTree {
         String[] decLine;
         String[][] fullArray;
 
-        while(scanner.hasNextLine()){
+        while (scanner.hasNextLine()) {
             fullLine = scanner.nextLine().split(" *::= *");
             decLine = fullLine[1].split("\\|");
             fullArray = new String[decLine.length][];
@@ -40,19 +39,19 @@ public class GrammarTree {
         scanner.close();
 
         verify();
-        addNonTerminalLexemes();
+        addTerminalLexemes();
     }
 
-    private boolean isTerminal(String lexeme) {
+    private boolean isNonTerminal(String lexeme) {
         return lexeme.length() > 2 && lexeme.charAt(0) == '<' && lexeme.charAt(lexeme.length() - 1) == '>';
     }
 
-    private void addNonTerminalLexemes() {
+    private void addTerminalLexemes() {
         for (String key : grammarMap.keySet()) {
             for (String[] line : grammarMap.get(key)) {
                 for (String lexeme : line) {
-                    if (!isTerminal(lexeme) && !nonterimalLexemesSet.contains(lexeme)) {
-                        nonterimalLexemesSet.add(lexeme);
+                    if (!isNonTerminal(lexeme) && !terminalLexemesSet.contains(lexeme)) {
+                        terminalLexemesSet.add(lexeme);
                     }
                 }
             }
@@ -63,7 +62,7 @@ public class GrammarTree {
         for (String key : grammarMap.keySet()) {
             for (String[] line : grammarMap.get(key)) {
                 for (String lexeme : line) {
-                    if (!grammarMap.containsKey(lexeme) && isTerminal(lexeme)) {
+                    if (!grammarMap.containsKey(lexeme) && isNonTerminal(lexeme)) {
                         throw new IllegalArgumentException(key + " не содержит :" + lexeme + ";");
                     }
                 }
@@ -94,7 +93,7 @@ public class GrammarTree {
         for (String key : grammarMap.keySet()) {
             map.put(key, index++);
         }
-        for (String key : nonterimalLexemesSet) {
+        for (String key : terminalLexemesSet) {
             map.put(key, index++);
         }
         map.put("#", index);
@@ -111,20 +110,10 @@ public class GrammarTree {
         return table;
     }
 
-    private void fillEquals(String[][] precedenceTable, LinkedHashMap<String, Integer> lexemesMap) {
-        for (String[][] line : grammarMap.values()) {
-            for (String[] lexemes : line) {
-                for (int i = 0; i < lexemes.length - 1; i++) {
-                    precedenceTable[lexemesMap.get(lexemes[i]) + 1][lexemesMap.get(lexemes[i + 1]) + 1] = "=";
-                }
-            }
-        }
-    }
-
     private HashMap<String, Iterable<String>> getFirstsMap(LinkedHashMap<String, Integer> lexemesMap) {
         HashMap<String, Iterable<String>> firstMap = new HashMap<>();
-        for (String key :lexemesMap.keySet()) {
-            if (isTerminal(key)) {
+        for (String key : lexemesMap.keySet()) {
+            if (isNonTerminal(key)) {
                 firstMap.put(key, getFirstPlus(key));
             }
         }
@@ -133,27 +122,12 @@ public class GrammarTree {
 
     private HashMap<String, Iterable<String>> getLastMap(LinkedHashMap<String, Integer> lexemesMap) {
         HashMap<String, Iterable<String>> lastMap = new HashMap<>();
-        for (String key :lexemesMap.keySet()) {
-            if (isTerminal(key)) {
+        for (String key : lexemesMap.keySet()) {
+            if (isNonTerminal(key)) {
                 lastMap.put(key, getLastPlus(key));
             }
         }
         return lastMap;
-    }
-
-    private void fillMore(String[][] precedenceTable, LinkedHashMap<String, Integer> lexemesMap, HashMap<String, Iterable<String>> firstMap) {
-
-        for (int i = 1; i < precedenceTable.length; i++) {
-            for (int j = 1; j < precedenceTable[i].length; j++) {
-                if (precedenceTable[i][j] != null && precedenceTable[i][j].equals("=")) {
-                    if (firstMap.containsKey(precedenceTable[0][j])) {
-                        for (String lexeme : firstMap.get(precedenceTable[0][j])) {
-                            precedenceTable[i][lexemesMap.get(lexeme) + 1] = "<";
-                        }
-                    }
-                }
-            }
-        }
     }
 
     private Iterable<String> getFirstPlus(String parent) {
@@ -166,7 +140,7 @@ public class GrammarTree {
             for (String[] line : grammarMap.get(lexeme)) {
                 if (!firsts.contains(line[0])) {
                     firsts.add(line[0]);
-                    if (isTerminal(line[0])) {
+                    if (isNonTerminal(line[0])) {
                         queue.add(line[0]);
                     }
                 }
@@ -175,19 +149,72 @@ public class GrammarTree {
         return firsts;
     }
 
-    private void fillLess(String[][] precedenceTable
-            , LinkedHashMap<String
-            , Integer> lexemesMap
-            , HashMap<String, Iterable<String>> firstMap
-            , HashMap<String, Iterable<String>> lastMap) {
+    private Iterable<String> getLastPlus(String parent) {
+        LinkedList<String> queue = new LinkedList<>();
+        TreeSet<String> lasts = new TreeSet<>();
+        queue.push(parent);
+        String lexeme;
+        while (!queue.isEmpty()) {
+            lexeme = queue.removeFirst();
+            for (String[] line : grammarMap.get(lexeme)) {
+                if (!lasts.contains(line[line.length - 1])) {
+                    lasts.add(line[line.length - 1]);
+                    if (isNonTerminal(line[line.length - 1])) {
+                        queue.add(line[line.length - 1]);
+                    }
+                }
+            }
+        }
+        return lasts;
+    }
+
+    private void fillEquals(String[][] precedenceTable, LinkedHashMap<String, Integer> lexemesMap) {
+        for (String[][] line : grammarMap.values()) {
+            for (String[] lexemes : line) {
+                for (int i = 0; i < lexemes.length - 1; i++) {
+                    precedenceTable[lexemesMap.get(lexemes[i]) + 1][lexemesMap.get(lexemes[i + 1]) + 1] = "=";
+                }
+            }
+        }
+    }
+
+    private void fillLess(String[][] precedenceTable, LinkedHashMap<String, Integer> lexemesMap
+            , HashMap<String, Iterable<String>> firstMap) {
+        for (int i = 1; i < precedenceTable.length; i++) {
+            for (int j = 1; j < precedenceTable[i].length; j++) {
+                if (precedenceTable[i][j] != null && precedenceTable[i][j].equals("=")) {
+                    if (firstMap.containsKey(precedenceTable[0][j])) {
+                        for (String lexeme : firstMap.get(precedenceTable[0][j])) {
+                            if (precedenceTable[i][lexemesMap.get(lexeme) + 1] == null || Objects.equals(precedenceTable[i][lexemesMap.get(lexeme) + 1], "<")) {
+                                precedenceTable[i][lexemesMap.get(lexeme) + 1] = "<";
+                            } else {
+//                                throw new IllegalArgumentException("Конфлікт. Відношення (" + precedenceTable[i][0] + " i "
+//                                        + precedenceTable[0][lexemesMap.get(lexeme) + 1] + ") уже існує");
+                                System.out.println("Конфлікт <. Відношення (" + precedenceTable[i][0] + " i "
+                                        + precedenceTable[0][lexemesMap.get(lexeme) + 1] + ") уже існує "+ precedenceTable[i][lexemesMap.get(lexeme) + 1]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void fillMore(String[][] precedenceTable, LinkedHashMap<String, Integer> lexemesMap
+            , HashMap<String, Iterable<String>> firstMap, HashMap<String, Iterable<String>> lastMap) {
         for (int i = 1; i < precedenceTable.length; i++) {
             for (int j = 1; j < precedenceTable[i].length; j++) {
                 if (precedenceTable[i][j] != null && precedenceTable[i][j].equals("=")) {
                     if (lastMap.containsKey(precedenceTable[i][0])) {
-                        if (isTerminal(precedenceTable[0][j])) {
+                        if (isNonTerminal(precedenceTable[0][j])) {
                             for (String lexeme : lastMap.get(precedenceTable[i][0])) {
                                 for (String lexemeS : firstMap.get(precedenceTable[0][j])) {
-                                    precedenceTable[lexemesMap.get(lexeme) + 1][lexemesMap.get(lexemeS) + 1] = ">";
+                                    if (precedenceTable[lexemesMap.get(lexeme) + 1][lexemesMap.get(lexemeS) + 1] == null) {
+                                        precedenceTable[lexemesMap.get(lexeme) + 1][lexemesMap.get(lexemeS) + 1] = ">";
+                                    } else {
+                                        System.out.println("Конфлікт >. Відношення (" + precedenceTable[lexemesMap.get(lexeme) + 1][0] + " i "
+                                                + precedenceTable[0][lexemesMap.get(lexemeS) + 1] + ") уже існує");
+                                    }
                                 }
                             }
                         } else {
@@ -201,24 +228,7 @@ public class GrammarTree {
         }
     }
 
-    private Iterable<String> getLastPlus(String parent) {
-        LinkedList<String> queue = new LinkedList<>();
-        TreeSet<String> lasts = new TreeSet<>();
-        queue.push(parent);
-        String lexeme;
-        while (!queue.isEmpty()) {
-            lexeme = queue.removeFirst();
-            for (String[] line : grammarMap.get(lexeme)) {
-                if (!lasts.contains(line[line.length - 1])) {
-                    lasts.add(line[line.length - 1]);
-                    if (isTerminal(line[line.length - 1])) {
-                        queue.add(line[line.length - 1]);
-                    }
-                }
-            }
-        }
-        return lasts;
-    }
+
 
     private void fillSharp(String[][] precedenceTable) {
         for (int i = 1; i < precedenceTable.length - 1; i++) {
@@ -243,8 +253,8 @@ public class GrammarTree {
         HashMap<String, Iterable<String>> firstMap = getFirstsMap(lexemesMap);
         HashMap<String, Iterable<String>> lastMap = getLastMap(lexemesMap);
         fillEquals(precedenceTable, lexemesMap);
-        fillMore(precedenceTable, lexemesMap, firstMap);
-        fillLess(precedenceTable, lexemesMap, firstMap, lastMap);
+        fillLess(precedenceTable, lexemesMap, firstMap);
+        fillMore(precedenceTable, lexemesMap, firstMap, lastMap);
         fillSharp(precedenceTable);
         fillEmpties(precedenceTable);
         return precedenceTable;

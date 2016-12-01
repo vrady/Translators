@@ -25,7 +25,8 @@ public class lab4 extends Application {
         Group root = new Group();
         primaryStage.setTitle("Відношення передування Врадій Дмитро ТР-42");
         //getGrammar
-        GrammarTree tree = new GrammarTree("C:\\Users\\dimav\\Documents\\Translators\\src\\grammarTable.txt");
+//        GrammarTree tree = new GrammarTree("C:\\Users\\dimav\\Documents\\Translators\\src\\grammarTable.txt");
+        GrammarTree tree = new GrammarTree("C:\\Users\\dimav\\Documents\\Translators\\test1.txt");
         String[][] grammarTable = tree.getPrecedenceTable();
 
         //createTable
@@ -43,7 +44,7 @@ public class lab4 extends Application {
             });
             table.getColumns().add(tableColumn);
         }
-        table.getColumns().add(new TableColumn(grammarTable[0][68]));
+        table.getColumns().add(new TableColumn(grammarTable[0][grammarTable.length - 1]));
         ObservableList<String[]> data = FXCollections.observableArrayList();
         data.addAll(Arrays.asList(grammarTable));
         data.remove(0);
