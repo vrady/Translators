@@ -11,8 +11,14 @@ public class GrammarTree {
 
     private LinkedHashMap<String, String[][]> grammarMap;
     private LinkedHashSet<String> terminalLexemesSet;
+    private String errors;
+
+    public String getErrors() {
+        return errors;
+    }
 
     public GrammarTree(String grammarFileName) throws FileNotFoundException {
+        errors = "";
         grammarMap = new LinkedHashMap<>();
         terminalLexemesSet = new LinkedHashSet<>();
         parseGrammarLexemesFile(grammarFileName);
@@ -37,8 +43,13 @@ public class GrammarTree {
         }
 
         scanner.close();
-
-        verify();
+        try {
+            verify();
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            System.exit(1);
+        }
         addTerminalLexemes();
     }
 
@@ -63,7 +74,7 @@ public class GrammarTree {
             for (String[] line : grammarMap.get(key)) {
                 for (String lexeme : line) {
                     if (!grammarMap.containsKey(lexeme) && isNonTerminal(lexeme)) {
-                        throw new IllegalArgumentException(key + " не содержит :" + lexeme + ";");
+                        throw new IllegalArgumentException(key + " не містить :" + lexeme + ";");
                     }
                 }
             }
@@ -182,16 +193,16 @@ public class GrammarTree {
             , HashMap<String, Iterable<String>> firstMap) {
         for (int i = 1; i < precedenceTable.length; i++) {
             for (int j = 1; j < precedenceTable[i].length; j++) {
-                if (precedenceTable[i][j] != null && precedenceTable[i][j].equals("=")) {
-                    if (firstMap.containsKey(precedenceTable[0][j])) {
-                        for (String lexeme : firstMap.get(precedenceTable[0][j])) {
-                            if (precedenceTable[i][lexemesMap.get(lexeme) + 1] == null || Objects.equals(precedenceTable[i][lexemesMap.get(lexeme) + 1], "<")) {
-                                precedenceTable[i][lexemesMap.get(lexeme) + 1] = "<";
+                if (precedenceTable[i][j] != null && precedenceTable[i][j].equals("=")) { //знаходимо віднощення R=V, V - нетермінал
+                    if (firstMap.containsKey(precedenceTable[0][j])) { //перевіряємо чи є first plus для V
+                        for (String lexeme : firstMap.get(precedenceTable[0][j])) { //перебираємо елементи first plus
+                            if (precedenceTable[i][lexemesMap.get(lexeme) + 1] == null
+                                    || Objects.equals(precedenceTable[i][lexemesMap.get(lexeme) + 1], "<")) {
+                                precedenceTable[i][lexemesMap.get(lexeme) + 1] = "<"; //встановлюємо < між R i first plus
                             } else {
-//                                throw new IllegalArgumentException("Конфлікт. Відношення (" + precedenceTable[i][0] + " i "
-//                                        + precedenceTable[0][lexemesMap.get(lexeme) + 1] + ") уже існує");
-                                System.out.println("Конфлікт <. Відношення (" + precedenceTable[i][0] + " i "
-                                        + precedenceTable[0][lexemesMap.get(lexeme) + 1] + ") уже існує "+ precedenceTable[i][lexemesMap.get(lexeme) + 1]);
+                                errors += "Конфлікт <. Відношення (" + precedenceTable[i][0] + " i "
+                                        + precedenceTable[0][lexemesMap.get(lexeme) + 1] + ") уже існує "
+                                        + precedenceTable[i][lexemesMap.get(lexeme) + 1] + "\n";
                             }
                         }
                     }
@@ -206,20 +217,28 @@ public class GrammarTree {
             for (int j = 1; j < precedenceTable[i].length; j++) {
                 if (precedenceTable[i][j] != null && precedenceTable[i][j].equals("=")) {
                     if (lastMap.containsKey(precedenceTable[i][0])) {
-                        if (isNonTerminal(precedenceTable[0][j])) {
-                            for (String lexeme : lastMap.get(precedenceTable[i][0])) {
-                                for (String lexemeS : firstMap.get(precedenceTable[0][j])) {
-                                    if (precedenceTable[lexemesMap.get(lexeme) + 1][lexemesMap.get(lexemeS) + 1] == null) {
+                        if (isNonTerminal(precedenceTable[0][j])) { //3.2
+                            for (String lexeme : lastMap.get(precedenceTable[i][0])) { //last plus для R
+                                for (String lexemeS : firstMap.get(precedenceTable[0][j])) {//first plus для V
+                                    if (precedenceTable[lexemesMap.get(lexeme) + 1][lexemesMap.get(lexemeS) + 1] == null ||
+                                            Objects.equals(precedenceTable[lexemesMap.get(lexeme) + 1][lexemesMap.get(lexemeS) + 1], ">")) {
                                         precedenceTable[lexemesMap.get(lexeme) + 1][lexemesMap.get(lexemeS) + 1] = ">";
                                     } else {
-                                        System.out.println("Конфлікт >. Відношення (" + precedenceTable[lexemesMap.get(lexeme) + 1][0] + " i "
-                                                + precedenceTable[0][lexemesMap.get(lexemeS) + 1] + ") уже існує");
+                                        errors+= "Конфлікт >. Відношення (" + precedenceTable[lexemesMap.get(lexeme) + 1][0] + " i "
+                                                + precedenceTable[0][lexemesMap.get(lexemeS) + 1] + ") уже існує " +
+                                                precedenceTable[lexemesMap.get(lexeme) + 1][j] +"\n";
                                     }
                                 }
                             }
-                        } else {
-                            for (String lexeme : lastMap.get(precedenceTable[i][0])) {
-                                precedenceTable[lexemesMap.get(lexeme) + 1][j] = ">";
+                        } else { //3.1
+                            for (String lexeme : lastMap.get(precedenceTable[i][0])) { //last plus для R
+                                if (precedenceTable[lexemesMap.get(lexeme) + 1][j] == null ||
+                                        Objects.equals(precedenceTable[lexemesMap.get(lexeme) + 1][j], ">")) {
+                                    precedenceTable[lexemesMap.get(lexeme) + 1][j] = ">";
+                                }else {
+                                    errors+= "Конфлікт >. Відношення (" + precedenceTable[lexemesMap.get(lexeme) + 1][0] + " i "
+                                            + precedenceTable[0][j] + ") уже існує " + precedenceTable[lexemesMap.get(lexeme) + 1][j] + "\n";
+                                }
                             }
                         }
                     }
