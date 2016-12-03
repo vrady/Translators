@@ -45,8 +45,7 @@ public class GrammarTree {
         scanner.close();
         try {
             verify();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             System.exit(1);
         }
@@ -141,7 +140,7 @@ public class GrammarTree {
         return lastMap;
     }
 
-    private Iterable<String> getFirstPlus(String parent) {
+    private TreeSet<String> getFirstPlus(String parent) {
         LinkedList<String> queue = new LinkedList<>();
         TreeSet<String> firsts = new TreeSet<>();
         queue.push(parent);
@@ -160,7 +159,7 @@ public class GrammarTree {
         return firsts;
     }
 
-    private Iterable<String> getLastPlus(String parent) {
+    private TreeSet<String> getLastPlus(String parent) {
         LinkedList<String> queue = new LinkedList<>();
         TreeSet<String> lasts = new TreeSet<>();
         queue.push(parent);
@@ -224,29 +223,29 @@ public class GrammarTree {
                                             Objects.equals(precedenceTable[lexemesMap.get(lexeme) + 1][lexemesMap.get(lexemeS) + 1], ">")) {
                                         precedenceTable[lexemesMap.get(lexeme) + 1][lexemesMap.get(lexemeS) + 1] = ">";
                                     } else {
-                                        errors+= "Конфлікт >. Відношення (" + precedenceTable[lexemesMap.get(lexeme) + 1][0] + " i "
+                                        errors += "Конфлікт >. Відношення (" + precedenceTable[lexemesMap.get(lexeme) + 1][0] + " i "
                                                 + precedenceTable[0][lexemesMap.get(lexemeS) + 1] + ") уже існує " +
-                                                precedenceTable[lexemesMap.get(lexeme) + 1][j] +"\n";
+                                                precedenceTable[lexemesMap.get(lexeme) + 1][j] + "\n";
                                     }
                                 }
                             }
-                        } else { //3.1
-                            for (String lexeme : lastMap.get(precedenceTable[i][0])) { //last plus для R
-                                if (precedenceTable[lexemesMap.get(lexeme) + 1][j] == null ||
-                                        Objects.equals(precedenceTable[lexemesMap.get(lexeme) + 1][j], ">")) {
-                                    precedenceTable[lexemesMap.get(lexeme) + 1][j] = ">";
-                                }else {
-                                    errors+= "Конфлікт >. Відношення (" + precedenceTable[lexemesMap.get(lexeme) + 1][0] + " i "
-                                            + precedenceTable[0][j] + ") уже існує " + precedenceTable[lexemesMap.get(lexeme) + 1][j] + "\n";
-                                }
+                        }
+                        //3.1
+                        for (String lexeme : lastMap.get(precedenceTable[i][0])) { //last plus для R
+                            if (precedenceTable[lexemesMap.get(lexeme) + 1][j] == null ||
+                                    Objects.equals(precedenceTable[lexemesMap.get(lexeme) + 1][j], ">")) {
+                                precedenceTable[lexemesMap.get(lexeme) + 1][j] = ">";
+                            } else {
+                                errors += "Конфлікт >. Відношення (" + precedenceTable[lexemesMap.get(lexeme) + 1][0] + " i "
+                                        + precedenceTable[0][j] + ") уже існує " + precedenceTable[lexemesMap.get(lexeme) + 1][j] + "\n";
                             }
                         }
+
                     }
                 }
             }
         }
     }
-
 
 
     private void fillSharp(String[][] precedenceTable) {
