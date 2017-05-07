@@ -1,523 +1,179 @@
 package Analyzers;
 
-import Models.Errors;
 import Models.Lexeme;
+import Models.PDALexeme;
+import Models.PDARules;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Objects;
 
 /**
- * Created by vrady on 27.10.16.
+ * Created by vrady on 03.11.16.
  */
 public class SyntaxAnalyzer {
 
-    private static ArrayList<Lexeme> lexemes;
+    private ArrayList<Lexeme> lexemes;
+    private ArrayList<Double> listConstants;
+    private ArrayList<String> listIds;
+    private int index;
+    private LinkedList<Integer> stack;
+    private ArrayList<PDALexeme> pdaLexemes;
+    private ArrayList<PDARules> pdaRules;
 
-    private ArrayList<Errors> errors;
+    public SyntaxAnalyzer(LexicalAnalyzer analyzer) {
+        this.lexemes = analyzer.getLexemes();
+        this.listConstants = analyzer.getConstants();
+        this.listIds = analyzer.getIds();
+        this.index = 0;
+        this.pdaRules = new ArrayList<>();
+        this.pdaLexemes = new ArrayList<>();
+        this.stack = new LinkedList<>();
 
-    private Integer lexNumber;
-
-    ArrayList<Errors> getErrors() {
-        return errors;
+        initRules(pdaRules);
+        analyze();
     }
 
-    SyntaxAnalyzer(LexicalAnalyzer analyzer) {
-        lexemes = analyzer.getLexemes();
-        errors = new ArrayList<>();
-        lexNumber = 0;
-
-        program();
+    private void analyze() {
+        int mode = 1;
+        for (index = 0; index < lexemes.size(); index++) {
+            mode = getState(mode, stack);
+            if (lexemes.get(lexemes.size() - 1).getLex() != 16) {
+                throw new IllegalArgumentException("Excepted '}' at end of the file");
+            }
+        }
     }
 
-    private boolean outOfRange() {
-        return lexNumber < lexemes.size();
-    }
+    private int getState(int state, LinkedList<Integer> stack) {
+        for (PDARules pdaRule : pdaRules) {
+            if (Objects.equals(pdaRule.getLexCode(), lexemes.get(index).getLex())) {
+                if (pdaRule.getAlpha() == state) {
 
-    private int getLexCode() {
-        return lexemes.get(lexNumber).getLex();
-    }
-
-    private int getLexLine() {
-        return lexemes.get(lexNumber).getLine();
-    }
-
-    private boolean program() {
-        if (outOfRange() && getLexCode() == 1) { // program
-            lexNumber++;
-            if (outOfRange() && getLexCode() == 37) { //IDN
-                lexNumber++;
-                if (outOfRange() && getLexCode() == 20) lexNumber++;
-                if (outOfRange() && getLexCode() == 2) {
-                    lexNumber++;
-                    if (declarationList()) {
-                        if (outOfRange() && getLexCode() == 15) { // {
-                            lexNumber++;
-                            if (operatorList()) { //
-                                if (outOfRange() && getLexCode() == 16) { // }
-                                    lexNumber++;
-                                    System.out.println("Помилок немає");
-                                    return true;
-                                } else {
-                                    System.out.println("Рядок " + getLexLine() + ": відсутні закриваючі дужки } program()");
-                                    errors.add(new Errors(getLexLine(), "відсутні закриваючі дужки } program()"));
-                                    return false;
-                                }
-                            } else {
-                                System.out.println("Рядок " + getLexLine() + ": невірний список операторів program()");
-                                errors.add(new Errors(getLexLine(), "невірний список операторів program()"));
-                                return false;
-                            }
+                    if (pdaRule.getBeta() != null) {
+                        if (pdaRule.getStack() == null) {
+                            pdaLexemes.add(new PDALexeme(index, getLexeme(), state, getStack()));
+                            return pdaRule.getBeta();
                         } else {
-                            System.out.println("Рядок " + getLexLine() + ": відсутні відкриваючі дужки { program()");
-                            errors.add(new Errors(getLexLine(), "відсутні відкриваючі дужки { program()"));
-                            return false;
+                            stack.push(pdaRule.getStack());
+                            pdaLexemes.add(new PDALexeme(index, getLexeme(), state, getStack()));
+                            return pdaRule.getBeta();
                         }
                     } else {
-                        System.out.println("Рядок " + getLexLine() + ": невірний список оголошення program()");
-                        errors.add(new Errors(getLexLine(), "невірний список оголошення program()"));
-                        return false;
+                        pdaLexemes.add(new PDALexeme(index, getLexeme(), state, getStack()));
+                        if (state == 8) {
+                            stack.push(pdaRule.getSemantStack());
+                            return pdaRule.getSemantBeta();
+                        } else return stack.pop();
                     }
-                } else {
-                    System.out.println("Рядок " + getLexLine() + ": немає var program()");
-                    errors.add(new Errors(getLexLine(), "немає var program()"));
-                    return false;
-                }
-            } else {
-                System.out.println("Рядок " + getLexLine() + ": немає назви програми program()");
-                errors.add(new Errors(getLexLine(), "немає назви програми program()"));
-                return false;
-            }
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": програма має починатись зі слова program program()");
-            errors.add(new Errors(getLexLine(), "програма має починатись зі слова program program()"));
-            return false;
-        }
-    }
 
-    private boolean declarationList() {
-        if (variableType()) {
-            if (idList()) {
-                while (outOfRange() && (getLexCode() == 20)) {
-                    lexNumber++;
-                    if (variableType()) {
-                        if (!idList()) {
-                            System.out.println("Рядок " + getLexLine() + ": оголосити список ід declarationList()");
-                            errors.add(new Errors(getLexLine(), "оголосити список ід declarationList()"));
-                            return false;
-                        }
-                    } else {
-                        System.out.println("Рядок " + getLexLine() + ": немає типу declarationList()");
-                        errors.add(new Errors(getLexLine(), "немає типу declarationList()"));
-                        return false;
+                }
+            }
+
+        }
+        for (PDARules pdaRule : pdaRules) {
+            if (pdaRule.getAlpha() == state) {
+                if (pdaRule.getSemantBeta() != null) {
+                    if (pdaRule.getSemantBeta() == -1) {
+                        pdaLexemes.add(new PDALexeme(index, getLexeme(), state, getStack()));
+                        return getState(stack.pop(), stack);
                     }
-                }
-                return true;
-            } else {
-                System.out.println("Рядок " + getLexLine() + ": оголосити список ід declarationList()");
-                errors.add(new Errors(getLexLine(), "оголосити список ід declarationList()"));
-                return false;
-            }
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": відсутній тип declarationList()");
-            errors.add(new Errors(getLexLine(), "відсутній тип declarationList()"));
-            return false;
-        }
-    }
-
-    private boolean variableType() {
-        if (outOfRange() && (getLexCode() == 3 || getLexCode() == 4)) {
-            lexNumber++;
-            return true;
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": тип може бути int або real variableType()");
-            errors.add(new Errors(getLexLine(), "тип може бути int або real variableType()"));
-            return false;
-        }
-    }
-
-    private boolean idList() {
-        if (outOfRange() && getLexCode() == 37) {
-            lexNumber++;
-            while (outOfRange() && getLexCode() == 21) {
-                lexNumber++;
-                if (outOfRange() && getLexCode() == 37) {
-                    lexNumber++;
+                    stack.push(pdaRule.getSemantStack());
+                    pdaLexemes.add(new PDALexeme(index, getLexeme(), state, getStack()));
+                    return getState(pdaRule.getSemantBeta(), stack);
                 } else {
-                    System.out.println("Рядок " + getLexLine() + ": не ідентифікатор idList()");
-                    errors.add(new Errors(getLexLine(), "не ідентифікатор idList()"));
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": має бути список ідентифікаторів idList()");
-            errors.add(new Errors(getLexLine(), "має бути список ідентифікаторів idList()"));
-            return false;
-        }
-    }
-
-    private boolean operatorList() { // переход на нову строчку працює, розділяє оператори
-        if (outOfRange() && getLexCode() == 16) { // }
-            System.out.println("Рядок " + getLexLine() + ": пустий список операторів operatorList()");
-            errors.add(new Errors(getLexLine(), "пустий список операторів operatorList()"));
-            return false;
-        } else if (operator()) {
-            if (outOfRange() && getLexCode() == 20) { // переход на нову строку
-                lexNumber++;
-                if (outOfRange() && getLexCode() == 14) { //fi
-                    return true;
-                }
-                while (outOfRange() && getLexCode() != 16) {
-                    if (operator()) {
-                        if (outOfRange() && getLexCode() == 20) {
-                            lexNumber++;
-                            if (outOfRange() && getLexCode() == 14) {
-                                return true;
-                            }
-                        } else {
-                            System.out.println("Рядок " + getLexLine() + ": немає переходу на новий рядок operatorList()");
-                            errors.add(new Errors(getLexLine(), "немає переходу на новий рядок operatorList()"));
-                            return false;
-                        }
-                    } else {
-                        System.out.println("Рядок " + getLexLine() + ": невірний оператор operatorList()");
-                        errors.add(new Errors(getLexLine(), "невірний оператор operatorList()"));
-                        return false;
-                    }
-                }
-                return true;
-            } else {
-                System.out.println("Рядок " + getLexLine() + ": немає переходу на новий рядок operatorList()");
-                errors.add(new Errors(getLexLine(), "немає переходу на новий рядок operatorList()"));
-                return false;
-            }
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": невірний оператор operatorList()");
-            errors.add(new Errors(getLexLine(), "невірний оператор operatorList()"));
-            return false;
-        }
-    }
-
-    private boolean operator() {
-//        ОПЕРАТОР ПРИСВОЄННЯ І ТЕРНАРНИЙ ++++++++++++++++++++++
-        if (outOfRange() && getLexCode() == 37) { // IDN
-            lexNumber++;
-            if (outOfRange() && getLexCode() == 30) { // =
-                lexNumber++;
-                int i = 0;
-                boolean state = false;
-                while (outOfRange() && getLexCode() != 20) {
-                    if (getLexCode() == 22) {
-                        state = true;
-                        break;
-                    } else state = false;
-                    i++;
-                    lexNumber++;
-                }
-                lexNumber -= i;
-                if (!state) {
-                    if (expression()) {
-                        return true;
-                    } else {
-                        System.out.println("Рядок " + getLexLine() + ": має бути вираз operator()");
-                        errors.add(new Errors(getLexLine(), ": має бути вираз operator()"));
-                        return false;
-                    }
-                } else if (logicalExpression()) {
-                    if (outOfRange() && getLexCode() == 22) {
-                        lexNumber++;
-                        if (expression()) {
-                            if (outOfRange() && getLexCode() == 23) {
-                                lexNumber++;
-                                if (expression()) {
-                                    return true;
-                                } else {
-                                    System.out.println("Рядок " + getLexLine() + ": тернарний оператор має містити останній вираз operator()");
-                                    errors.add(new Errors(getLexLine(), ": тернарний оператор має містити останній вираз operator()"));
-                                    return false;
-                                }
-                            } else {
-                                System.out.println("Рядок " + getLexLine() + ": тернарний оператор має містить : між виразами operator()");
-                                errors.add(new Errors(getLexLine(), ": тернарний оператор має містить : між виразами operator()"));
-                                return false;
-                            }
-                        } else {
-                            System.out.println("Рядок " + getLexLine() + ": тернарний оператор має містити перший вираз operator()");
-                            errors.add(new Errors(getLexLine(), ": тернарний оператор має містити перший вираз operator()"));
-                            return false;
-                        }
-                    } else {
-                        System.out.println("Рядок " + getLexLine() + ": тернарний оператор має містить ? перед виразами operator()");
-                        errors.add(new Errors(getLexLine(), ": тернарний оператор має містить ? перед виразами operator()"));
-                        return false;
-                    }
-                }
-            } else {
-                System.out.println("Рядок " + getLexLine() + ": оператор присвоєння(має бути =) operator()");
-                errors.add(new Errors(getLexLine(), ": оператор присвоєння(має бути =) operator()"));
-                return false;
-            }
-//            ОПЕРАТОР ВВОДУ ВИВОДУ ++++++++++
-        } else if (outOfRange() && (getLexCode() == 5 || getLexCode() == 6)) { // Read Write
-            lexNumber++;
-            if (outOfRange() && getLexCode() == 28) { // (
-                lexNumber++;
-                idList();
-                if (outOfRange() && getLexCode() == 29) { // )
-                    lexNumber++;
-                    return true;
-                } else {
-                    System.out.println("Рядок " + getLexLine() + ": оператор Read Write(має бути закриваюча дужка) operator()");
-                    errors.add(new Errors(getLexLine(), ": оператор Read Write(має бути закриваюча дужка) operator()"));
-                    return false;
-                }
-            } else {
-                System.out.println("Рядок " + getLexLine() + ": оператор Read Write(має бути відкриваюча дужка) operator()");
-                errors.add(new Errors(getLexLine(), ": оператор Read Write(має бути відкриваюча дужка) operator()"));
-                return false;
-            }
-//            ОПЕРАТОР ЦИКЛУ +++++++++++
-        } else if (outOfRange() && getLexCode() == 7) { //for
-            lexNumber++;
-            if (outOfRange() && getLexCode() == 37) { // IDN
-                lexNumber++;
-                if (outOfRange() && getLexCode() == 30) { // =
-                    lexNumber++;
-                    if (expression()) {
-                        if (outOfRange() && getLexCode() == 8) { // by
-                            lexNumber++;
-                            if (expression()) {
-                                if (outOfRange() && getLexCode() == 9) { //to
-                                    lexNumber++;
-                                    if (expression()) {
-                                        if (outOfRange() && getLexCode() == 10) { //do
-                                            lexNumber++;
-                                            if (operator()) {
-                                                if (outOfRange() && getLexCode() == 11) { //rof
-                                                    lexNumber++;
-                                                    return true;
-                                                } else {
-                                                    System.out.println("Рядок " + getLexLine() + ": цикл має закінчуватись на rof operator()");
-                                                    errors.add(new Errors(getLexLine(), ": цикл має закінчуватись на rof operator()"));
-                                                    return false;
-                                                }
-                                            } else {
-                                                System.out.println("Рядок " + getLexLine() + ": цикл має містити оператор після do operator()");
-                                                errors.add(new Errors(getLexLine(), ": цикл має містити оператор після do operator()"));
-                                                return false;
-                                            }
-                                        } else {
-                                            System.out.println("Рядок " + getLexLine() + ": цикл має містити do operator()");
-                                            errors.add(new Errors(getLexLine(), ": цикл має містити do operator()"));
-                                            return false;
-                                        }
-                                    } else {
-                                        System.out.println("Рядок " + getLexLine() + ": цикл має містити вираз після після to operator()");
-                                        errors.add(new Errors(getLexLine(), ": цикл має містити вираз після після to operator()"));
-                                        return false;
-                                    }
-                                } else {
-                                    System.out.println("Рядок " + getLexLine() + ": цикл має містити to operator()");
-                                    errors.add(new Errors(getLexLine(), ": цикл має містити to operator()"));
-                                    return false;
-                                }
-                            } else {
-                                System.out.println("Рядок " + getLexLine() + ": цикл має містити вираз після після by operator()");
-                                errors.add(new Errors(getLexLine(), ": цикл має містити вираз після після by operator()"));
-                                return false;
-                            }
-                        } else {
-                            System.out.println("Рядок " + getLexLine() + ": цикл має містити by operator()");
-                            errors.add(new Errors(getLexLine(), ": цикл має містити by operator()"));
-                            return false;
-                        }
-                    } else {
-                        System.out.println("Рядок " + getLexLine() + ": цикл має містити вираз після після = operator()");
-                        errors.add(new Errors(getLexLine(), ": цикл має містити вираз після після = operator()"));
-                        return false;
-                    }
-                } else {
-                    System.out.println("Рядок " + getLexLine() + ": цикл має містити = після IDN operator()");
-                    errors.add(new Errors(getLexLine(), ": цикл має містити = після IDN operator()"));
-                    return false;
-                }
-            } else {
-                System.out.println("Рядок " + getLexLine() + ": цикл має містити IDN після for operator()");
-                errors.add(new Errors(getLexLine(), ": цикл має містити IDN після for operator()"));
-                return false;
-            }
-//            ОПЕРАТОР УМОВНИЙ ПЕРЕХІД +++++++++++++++++
-        } else if (outOfRange() && getLexCode() == 12) { //if
-            lexNumber++;
-            if (logicalExpression()) {
-                if (outOfRange() && getLexCode() == 13) { //then
-                    lexNumber++;
-                    if (operatorList()) {
-                        if (outOfRange() && getLexCode() == 14) { //fi
-                            lexNumber++;
-                            return true;
-                        } else {
-                            System.out.println("Рядок " + getLexLine() + ": умовний оператор закінчується на fi operator()");
-                            errors.add(new Errors(getLexLine(), ": умовний оператор закінчується на fi operator()"));
-                            return false;
-                        }
-                    }
-                } else {
-                    System.out.println("Рядок " + getLexLine() + ": умовний оператор містить then operator()");
-                    errors.add(new Errors(getLexLine(), ": умовний оператор містить then operator()"));
-                    return false;
+                    throw new IllegalArgumentException("Exception " + pdaRule.getSemant()
+                            + " at row: " + lexemes.get(index).getLine());
                 }
             }
         }
-        System.out.println("Рядок " + getLexLine() + ": невідомий оператор operator()");
-        errors.add(new Errors(getLexLine(), ": невідомий оператор operator()"));
-        return false;
+        return 0;
     }
 
-    private boolean expression() {
-        if (terminal()) {
-            while (outOfRange() && (getLexCode() == 24 || getLexCode() == 25)) { // + -
-                lexNumber++;
-                terminal();
-            }
-            return true;
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": має бути термінал expression()");
-            errors.add(new Errors(getLexLine(), "має бути термінал expression()"));
-            return false;
-        }
-    }
-
-    private boolean terminal() {
-        if (multiplier()) {
-            while (outOfRange() && (getLexCode() == 26 || getLexCode() == 27)) { // * /
-                lexNumber++;
-                multiplier();
-            }
-            return true;
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": має бути множник terminal()");
-            errors.add(new Errors(getLexLine(), "має бути множник terminal()"));
-            return false;
-        }
-    }
-
-    private boolean multiplier() {
-        if (outOfRange() && getLexCode() == 28) { // (
-            lexNumber++;
-            expression();
-            if (outOfRange() && getLexCode() == 29) { // )
-                lexNumber++;
-                return true;
-            } else {
-                System.out.println("Рядок " + getLexLine() + ": має бути закриваюча дужка multiplier()");
-                errors.add(new Errors(getLexLine(), "має бути закриваюча дужка multiplier()"));
-                return false;
-            }
-        } else if (outOfRange() && (getLexCode() == 37 || getLexCode() == 38)) { //IDN CON
-            lexNumber++;
-            return true;
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": має бути IDN або CON або відкриваюча дужка для виразу multiplier()");
-            errors.add(new Errors(getLexLine(), "має бути IDN або CON multiplier()"));
-            return false;
-        }
-    }
-
-    private boolean logicalExpression() {
-        if (logicalTerminal()) {
-            while (outOfRange() && getLexCode() == 17) { // or
-                lexNumber++;
-                logicalTerminal();
-            }
-            return true;
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": має бути логічний вираз logicalExpression()");
-            errors.add(new Errors(getLexLine(), "має бути логічний вираз logicalExpression()"));
-            return false;
-        }
-    }
-
-    private boolean logicalTerminal() {
-        if (logicalMultiplier()) {
-            while (outOfRange() && getLexCode() == 18) { // and
-                lexNumber++;
-                logicalTerminal();
-            }
-            return true;
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": має бути логічний термінал logicalTerminal()");
-            errors.add(new Errors(getLexLine(), "має бути логічний термінал logicalTerminal()"));
-            return false;
-        }
-    }
-
-    private boolean logicalMultiplier() {
-        if (outOfRange() && getLexCode() == 28) { // (
-            lexNumber++;
-            if (logicalExpression()) {
-                if (outOfRange() && getLexCode() == 29) { // )
-                    lexNumber++;
-                    return true;
-                } else {
-                    System.out.println("Рядок " + getLexLine() + ": має бути закриваюча дужка logicalMultiplier()");
-                    errors.add(new Errors(getLexLine(), "має бути закриваюча дужка logicalMultiplier()"));
-                    return false;
-                }
-            }
-        } else if (outOfRange() && getLexCode() == 19) { // not
-            lexNumber++;
-            if (logicalMultiplier()) {
-                return true;
-            } else {
-                System.out.println("Рядок " + getLexLine() + ": має бути логічний множник після not logicalMultiplier()");
-                errors.add(new Errors(getLexLine(), "має бути логічний множник після not logicalMultiplier()"));
-                return false;
-            }
-        } else if (relation()) {
-            return true;
-        }
-        System.out.println("Рядок " + getLexLine() + ": має бути логічний множник logicalMultiplier()");
-        errors.add(new Errors(getLexLine(), "має бути логічний множник logicalMultiplier()"));
-        return false;
-    }
-
-    private boolean relation() {
-        if (expression()) {
-            if (tokenRelation()) {
-                if (expression()) {
-                    return true;
-                } else {
-                    System.out.println("Рядок " + getLexLine() + ": має бути останній вираз relation()");
-                    errors.add(new Errors(getLexLine(), "має бути останній вираз relation()"));
-                    return false;
-                }
-            } else {
-                System.out.println("Рядок " + getLexLine() + ": має бути знак відношення relation()");
-                errors.add(new Errors(getLexLine(), "має бути знак відношення relation()"));
-                return false;
-            }
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": має бути перший вираз relation()");
-            errors.add(new Errors(getLexLine(), "має бути перший вираз relation()"));
-            return false;
-        }
-    }
-
-    private boolean tokenRelation() { //знак відношення
-        if (outOfRange() && (getLexCode() == 31 || getLexCode() == 32 || getLexCode() == 33
-                || getLexCode() == 34 || getLexCode() == 35 || getLexCode() == 36)) {
-            lexNumber++;
-            return true;
-        } else {
-            System.out.println("Рядок " + getLexLine() + ": має бути знак відношення tokenRelation()");
-            errors.add(new Errors(getLexLine(), "має бути знак відношення tokenRelation()"));
-            return false;
-        }
-    }
-
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         String file = LexicalAnalyzer.readFile();
         LexicalAnalyzer analyzer = new LexicalAnalyzer(file);
         new SyntaxAnalyzer(analyzer);
+    }
+
+    public ArrayList<PDALexeme> getPdaLexemes() {
+        return pdaLexemes;
+    }
+
+    private String getLexeme() {
+        if (lexemes.get(index).getLex() == 37) {
+            return listIds.get(lexemes.get(index).getId());
+        }
+        if (lexemes.get(index).getLex() == 38) {
+            return "" + listConstants.get(lexemes.get(index).getCon());
+        }
+        return LexicalAnalyzer.lexemesArray[lexemes.get(index).getLex()];
+    }
+
+    private String getStack() {
+        String string = "";
+        for (Integer el : stack) {
+            string += " " + el;
+        }
+        return string;
+    }
+
+    private void initRules(ArrayList<PDARules> pdaRules) {
+        pdaRules.add(new PDARules(1, "program", 2, null, "[!=]error: Expected program", "", 1, null, null));
+        pdaRules.add(new PDARules(2, "IDN", 3, null, "[!=]error Expected IDN after program", "", 37, null, null));
+        pdaRules.add(new PDARules(3, "var", 4, null, "[!=]error Expected var", "", 2, null, null));
+        pdaRules.add(new PDARules(4, "int", 5, null, "[!=]error Expected int or real", "", 3, null, null));
+        pdaRules.add(new PDARules(4, "real", 5, null, "[!=]error Expected int or real", "", 4, null, null));
+        pdaRules.add(new PDARules(5, "IDN", 6, null, "[!=]error Expected IDN after type", "", 37, null, null));
+        pdaRules.add(new PDARules(6, ",", 5, null, "[!=]error Expected , or enter or {", "", 21, null, null));
+        pdaRules.add(new PDARules(6, "¶", 4, null, "[!=]error Expected , or enter or {", "", 20, null, null));
+        pdaRules.add(new PDARules(6, "{", 101, 7, "[!=]error Expected , or enter or {", "", 15, null, null));
+        pdaRules.add(new PDARules(7, "¶", 8, null, "[!=]error", "Expected enter", 20, null, null));
+        pdaRules.add(new PDARules(8, "}", null, null, "[!=]п/а опер 101 ↓7", "[=]вихід", 16, 101, 7));
+
+        pdaRules.add(new PDARules(101, "Write", 102, null, "[!=]error Expected operator", "", 6, null, null));
+        pdaRules.add(new PDARules(101, "Read", 102, null, "[!=]error Expected operator", "", 5, null, null));
+        pdaRules.add(new PDARules(101, "for", 105, null, "[!=]error Expected operator", "", 7, null, null));
+        pdaRules.add(new PDARules(101, "if", 301, 111, "[!=]error Expected operator", "", 12, null, null));
+        pdaRules.add(new PDARules(101, "IDN", 114, null, "[!=]error Expected operator", "", 37, null, null));
+        pdaRules.add(new PDARules(102, "(", 103, null, "[!=]error Expected (", "", 28, null, null));
+        pdaRules.add(new PDARules(103, "IDN", 104, null, "[!=]error Expected IDN after (", "", 37, null, null));
+        pdaRules.add(new PDARules(104, ",", 103, null, "[!=]error Expected , or ) after IDN", "вихід", 21, null, null));
+        pdaRules.add(new PDARules(104, ")", null, null, "[!=]error Expected , or ) after IDN", "вихід", 29, null, null));
+        pdaRules.add(new PDARules(105, "IDN", 106, null, "[!=]error Expected IDN after FOR", "", 37, null, null));
+        pdaRules.add(new PDARules(106, "=", 201, 107, "[!=]error Expected = after IDN in FOR", "", 30, null, null));
+        pdaRules.add(new PDARules(107, "by", 201, 108, "[!=]error Expected by in FOR", "", 8, null, null));
+        pdaRules.add(new PDARules(108, "to", 201, 109, "[!=]error Expected to in FOR", "", 9, null, null));
+        pdaRules.add(new PDARules(109, "do", 101, 110, "[!=]error Expected do in FOR", "", 10, null, null));
+        pdaRules.add(new PDARules(110, "rof", null, null, "[!=]error Expected rof in FOR", "вихід", 11, null, null));
+        pdaRules.add(new PDARules(111, "then", 101, 112, "[!=]error Expected then in IF", "", 13, null, null));
+        pdaRules.add(new PDARules(112, "¶", 113, null, "[!=]error Expected enter in IF", "", 20, null, null));
+        pdaRules.add(new PDARules(113, "fi", null, null, "[!=]п/а опер 101 ↓112", "вихід", 14, 101, 112));
+        pdaRules.add(new PDARules(114, "=", 115, null, "[!=]error Expected = after IDN", "", 30, null, null));
+        pdaRules.add(new PDARules(115, "[", 301, 116, "[!=]error Expected [ after = in Ternary", "", 39, 201, 119));
+        pdaRules.add(new PDARules(116, "?", 201, 117, "[!=]error Expected ? after logical expression in Ternary", "", 22, null, null));
+        pdaRules.add(new PDARules(117, ":", 201, 118, "[!=]error Expected : after expression in Ternary", "", 23, null, null));
+        pdaRules.add(new PDARules(118, "]", null, null, "[!=]error Expected ] after expression in Ternary", "вихід", 40, null, null));
+        pdaRules.add(new PDARules(119, "any lexeme", null, null, "EXIT", "", null, -1, null));
+
+        pdaRules.add(new PDARules(201, "IDN", 202, null, "[!=]error Expected IDN or CON or ( in Expression", "", 37, null, null));
+        pdaRules.add(new PDARules(201, "CON", 202, null, "[!=]error Expected IDN or CON or ( in Expression", "", 38, null, null));
+        pdaRules.add(new PDARules(201, "(", 201, 203, "[!=]error Expected IDN or CON or ( in Expression", "", 28, null, null));
+        pdaRules.add(new PDARules(202, "+", 201, null, "[!=]error Expected +-*/", "", 24, -1, null));
+        pdaRules.add(new PDARules(202, "-", 201, null, "[!=]error Expected +-*/", "", 25, -1, null));
+        pdaRules.add(new PDARules(202, "*", 201, null, "[!=]error Expected +-*/", "", 26, -1, null));
+        pdaRules.add(new PDARules(202, "/", 201, null, "[!=]error Expected +-*/", "", 27, -1, null));
+        pdaRules.add(new PDARules(203, ")", 202, null, "[!=]error Expected ) after IDN or CON", "", 29, null, null));
+
+        pdaRules.add(new PDARules(301, "not", 301, null, "[!=]п/а вираз 201 ↓302", "", 19, 201, 302));
+        pdaRules.add(new PDARules(301, "(", 301, 304, "[!=]п/а лог.в 301 ↓304", "", 28, 201, 302));
+        pdaRules.add(new PDARules(302, "<", 201, 303, "[!=]error Expected < > != == <= >=", "", 31, null, null));
+        pdaRules.add(new PDARules(302, ">", 201, 303, "[!=]error Expected < > != == <= >=", "", 32, null, null));
+        pdaRules.add(new PDARules(302, "!=", 201, 303, "[!=]error Expected < > != == <= >=", "", 36, null, null));
+        pdaRules.add(new PDARules(302, "==", 201, 303, "[!=]error Expected < > != == <= >=", "", 35, null, null));
+        pdaRules.add(new PDARules(302, "<=", 201, 303, "[!=]error Expected < > != == <= >=", "", 33, null, null));
+        pdaRules.add(new PDARules(302, ">=", 201, 303, "[!=]error Expected < > != == <= >=", "", 34, null, null));
+        pdaRules.add(new PDARules(303, "and", 301, null, "[!=]вихід", "", 18, -1, null));
+        pdaRules.add(new PDARules(303, "or", 301, null, "[!=]вихід", "", 17, -1, null));
+        pdaRules.add(new PDARules(304, ")", 303, null, "[!=]error Expected ) after Expression in LogicalExpression", "", 29, null, null));
     }
 }

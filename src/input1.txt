@@ -1,0 +1,3 @@
+program lab var int a,b
+real x{a=(2+2)*3
+}

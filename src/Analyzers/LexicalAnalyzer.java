@@ -98,9 +98,11 @@ public class LexicalAnalyzer {
         lexemesTable.put("!=", 36);
         lexemesTable.put("idn", 37);
         lexemesTable.put("con", 38);
+        lexemesTable.put("[", 39);
+        lexemesTable.put("]", 40);
     }
 
-    public final static String[] lexemesArray = new String[39];
+    public final static String[] lexemesArray = new String[41];
 
     static {
         lexemesArray[0] = null;
@@ -142,6 +144,8 @@ public class LexicalAnalyzer {
         lexemesArray[36] = "!=";
         lexemesArray[37] = "idn";
         lexemesArray[38] = "con";
+        lexemesArray[39] = "[";
+        lexemesArray[40] = "]";
     }
 
     private static TreeSet<Character> delimitationTable = new TreeSet<>();
@@ -162,6 +166,8 @@ public class LexicalAnalyzer {
         delimitationTable.add(' ');
         delimitationTable.add('\n');
         delimitationTable.add('¶');
+        delimitationTable.add('[');
+        delimitationTable.add(']');
     }
 
     private boolean isDelimiter(char l) {
@@ -180,7 +186,8 @@ public class LexicalAnalyzer {
             constantsCounter++;
             constantses.add(new Constants(constantsCounter,num));
         }
-        lexemes.add(Lexeme.сonstant(this.line, constants.lastIndexOf(num)));
+//        lexemes.add(Lexeme.сonstant(this.line, constants.lastIndexOf(num)));
+        lexemes.add(new Lexeme(this.line, 38, Double.toString(num), "con", constants.lastIndexOf(num), -1));
         currentLexeme = new StringBuilder();
     }
 
@@ -210,7 +217,8 @@ public class LexicalAnalyzer {
         idCounter++;
         identificators.add(new Identificators(idCounter, idState, lexem));
         ids.add(lexem);
-        lexemes.add(Lexeme.id(this.line, ids.indexOf(lexem)));
+//        lexemes.add(Lexeme.id(this.line, ids.indexOf(lexem)));
+        lexemes.add(new Lexeme(this.line, 37, lexem, "idn", -1, ids.indexOf(lexem)));
         currentLexeme = new StringBuilder();
     }
 
@@ -226,13 +234,15 @@ public class LexicalAnalyzer {
         }
         //перевірка чи лексема
         if (lexemesTable.containsKey(lexem)) {
-            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(lexem)));
+//            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(lexem)));
+            lexemes.add(new Lexeme(this.line, lexemesTable.get(lexem), lexem, lexem, -1, -1));
             currentLexeme = new StringBuilder();
             return;
         }
         //перевірка чи ідентифікатор
         if (ids.contains(lexem)) {
-            lexemes.add(Lexeme.id(this.line, ids.indexOf(lexem)));
+//            lexemes.add(Lexeme.id(this.line, ids.indexOf(lexem)));
+            lexemes.add(new Lexeme(this.line, 37, lexem, "idn", -1, ids.indexOf(lexem)));
             currentLexeme = new StringBuilder();
             return;
         }
@@ -331,9 +341,11 @@ public class LexicalAnalyzer {
                 if (l == '{') {
                     varmode = false;
                 }
-                lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(Character.toString(l))));
+//                lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(Character.toString(l))));
+                lexemes.add(new Lexeme(this.line, lexemesTable.get(Character.toString(l)), Character.toString(l), Character.toString(l), -1, -1));
             } else if (l == '\n') {
-                lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(Character.toString(l))));
+//                lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(Character.toString(l))));
+                lexemes.add(new Lexeme(this.line, lexemesTable.get(Character.toString(l)), Character.toString(l), Character.toString(l), -1, -1));
                 this.line++;
             }
             return 1;
@@ -410,37 +422,44 @@ public class LexicalAnalyzer {
     //<
     private int mode7(char l) {
         if (l == '=') {
-            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("<=")));
+//            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("<=")));
+            lexemes.add(new Lexeme(this.line, lexemesTable.get("<="), "<=", "<=", -1, -1));
             return 1;
         }
-        lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("<")));
+//        lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("<")));
+        lexemes.add(new Lexeme(this.line, lexemesTable.get("<"), "<", "<", -1, -1));
         return mode1(l);
     }
 
     //>
     private int mode8(char l) {
         if (l == '=') {
-            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(">=")));
+//            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(">=")));
+            lexemes.add(new Lexeme(this.line, lexemesTable.get(">="), ">=", ">=", -1, -1));
             return 1;
         }
-        lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(">")));
+//        lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(">")));
+        lexemes.add(new Lexeme(this.line, lexemesTable.get(">"), ">", ">", -1, -1));
         return mode1(l);
     }
 
     //=
     private int mode9(char l) {
         if (l == '=') {
-            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("==")));
+//            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("==")));
+            lexemes.add(new Lexeme(this.line, lexemesTable.get("=="), "==", "==", -1, -1));
             return 1;
         }
-        lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("=")));
+//        lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("=")));
+        lexemes.add(new Lexeme(this.line, lexemesTable.get("="), "=", "=", -1, -1));
         return mode1(l);
     }
 
     //!
     private int mode10(char l) {
         if (l == '=') {
-            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("!=")));
+//            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("!=")));
+            lexemes.add(new Lexeme(this.line, lexemesTable.get("!="), "!=", "!=", -1, -1));
             return 1;
         } else {
             throw new IllegalArgumentException("! is not the delimiter\nNumber of line: " + this.line);
@@ -499,7 +518,7 @@ public class LexicalAnalyzer {
 
     static String readFile(){
         String file = null;
-        try (InputStream stream = new FileInputStream("input.txt")) {
+        try (InputStream stream = new FileInputStream("C:\\Users\\dimav\\Documents\\Translators\\src\\input1.txt")) {
             byte[] b = new byte[stream.available()];
             stream.read(b);
             file = new String(b);

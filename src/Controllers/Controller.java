@@ -2,7 +2,6 @@ package Controllers;
 
 import Models.*;
 import Analyzers.*;
-import Main.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.EventHandler;
@@ -33,12 +32,24 @@ public class Controller implements Initializable {
     private Button runButton;
 
     @FXML
+    private Button polizButton;
+    @FXML
+    private Button polizButton1;
+
+    @FXML
     private TextArea textarea;
+
+    @FXML
+    private TextArea polizArea;
+    @FXML
+    private TextArea polizArea1;
 
     @FXML
     private Text text1;
     @FXML
     private Text text2;
+    @FXML
+    private Text text3;
 
     @FXML
     private TableView<Lexeme> table1;
@@ -97,12 +108,33 @@ public class Controller implements Initializable {
     @FXML
     private TableColumn<PDARules, String> semantEqual;
 
+    @FXML
+    private TableView<PolizProcessing> polizProcess;
+    @FXML
+    private TableColumn<PolizProcessing, String> inputPoliz;
+    @FXML
+    private TableColumn<PolizProcessing, String> stackPoliz;
+    @FXML
+    private TableColumn<PolizProcessing, String> outputPoliz;
+
+    @FXML
+    private TableView<PolizExecution> polizProcess1;
+    @FXML
+    private TableColumn<PolizExecution, String> stackPoliz1;
+    @FXML
+    private TableColumn<PolizExecution, String> outputPoliz1;
+
+    private LexicalAnalyzer analyzer;
+    private ReversePolishNotationGenerator reversePolishNotationGenerator;
+
 
     private ObservableList<Lexeme> userData = FXCollections.observableArrayList();
     private ObservableList<Identificators> userData1 = FXCollections.observableArrayList();
     private ObservableList<Constants> userData2 = FXCollections.observableArrayList();
     private ObservableList<PDALexeme> userData3 = FXCollections.observableArrayList();
     private ObservableList<PDARules> userData4 = FXCollections.observableArrayList();
+    private ObservableList<PolizProcessing> userData5 = FXCollections.observableArrayList();
+    private ObservableList<PolizExecution> userData6 = FXCollections.observableArrayList();
 
     private void initData1(LexicalAnalyzer analyzer) {
         ArrayList<Lexeme> listLexeme = analyzer.getLexemes();
@@ -203,6 +235,18 @@ public class Controller implements Initializable {
         userData4.add(new PDARules(304, ")", 303, null, "[!=]error", "", 29, null, null));
     }
 
+    private void initData6(ArrayList<PolizProcessing> poliz) {
+        for (PolizProcessing id : poliz) {
+            userData5.add(new PolizProcessing(id.getInputPoliz(), id.getStackPoliz(), id.getOutputPoliz()));
+        }
+    }
+
+    private void initData7(ArrayList<PolizExecution> poliz) {
+        for (PolizExecution id : poliz) {
+            userData6.add(new PolizExecution(id.getStack(), id.getPoliz()));
+        }
+    }
+
     private void setCells() {
         column11.setCellValueFactory(new PropertyValueFactory<>("counter"));
         column12.setCellValueFactory(new PropertyValueFactory<>("line"));
@@ -224,11 +268,15 @@ public class Controller implements Initializable {
         stack.setCellValueFactory(new PropertyValueFactory<>("stack"));
         semant.setCellValueFactory(new PropertyValueFactory<>("semant"));
         semantEqual.setCellValueFactory(new PropertyValueFactory<>("semantEqual"));
+        inputPoliz.setCellValueFactory(new PropertyValueFactory<>("inputPoliz"));
+        stackPoliz.setCellValueFactory(new PropertyValueFactory<>("stackPoliz"));
+        outputPoliz.setCellValueFactory(new PropertyValueFactory<>("outputPoliz"));
+        stackPoliz1.setCellValueFactory(new PropertyValueFactory<>("stack"));
+        outputPoliz1.setCellValueFactory(new PropertyValueFactory<>("poliz"));
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        Main.primaryStage.setResizable(false);
         setCells();
         initData5();
         tablePDA.setItems(userData4);
@@ -263,12 +311,13 @@ public class Controller implements Initializable {
                 tableSynt.getItems().clear();
                 text1.setText("Line for exceptions in Lexical Analyzer");
                 text2.setText("Line for exceptions in Syntax Analyzer");
+                text3.setText("Line for exceptions in POLIZ");
                 String file = textarea.getText();
                 try {
-                    LexicalAnalyzer analyzer = new LexicalAnalyzer(file);
+                    analyzer = new LexicalAnalyzer(file);
                     try {
-                        SyntaxAnalyzerPDA syntaxAnalyzerPDA = new SyntaxAnalyzerPDA(analyzer);
-                        initData4(syntaxAnalyzerPDA.getPdaLexemes());
+                        SyntaxAnalyzer syntaxAnalyzer = new SyntaxAnalyzer(analyzer);
+                        initData4(syntaxAnalyzer.getPdaLexemes());
                     } catch (Exception e) {
                         text2.setText(e.getMessage());
                     }
@@ -282,6 +331,32 @@ public class Controller implements Initializable {
                 table2.setItems(userData1);
                 table3.setItems(userData2);
                 tableSynt.setItems(userData3);
+            }
+        });
+        polizButton.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
+            @Override
+            public void handle(javafx.event.ActionEvent event) {
+                polizProcess.getItems().clear();
+                reversePolishNotationGenerator = new ReversePolishNotationGenerator(analyzer.getLexemes());
+                polizArea.setText(reversePolishNotationGenerator.generatePoliz());
+                initData6(reversePolishNotationGenerator.getPolizProcessing());
+                polizProcess.setItems(userData5);
+            }
+        });
+        polizButton1.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
+            @Override
+            public void handle(javafx.event.ActionEvent event) {
+                polizProcess1.getItems().clear();
+                ReversePolishNotationExecution reversePolishNotationExecution = new ReversePolishNotationExecution(reversePolishNotationGenerator);
+                try {
+                    reversePolishNotationExecution.runProgram();
+                    initData7(reversePolishNotationExecution.getPolizExecutions());
+                    polizProcess1.setItems(userData6);
+                } catch (Exception e) {
+                    text3.setText(e.getMessage());
+                    e.printStackTrace();
+                }
+                polizArea1.setText(reversePolishNotationExecution.getSolvedPoliz());
             }
         });
         saveButton.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
