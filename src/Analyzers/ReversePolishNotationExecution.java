@@ -189,9 +189,6 @@ public class ReversePolishNotationExecution {
 
     private String getPolizString(int index) {
         StringBuilder outputPoliz = new StringBuilder();
-//        for (Lexeme lexeme : poliz) {
-//            outputPoliz.append(lexeme.getLexName()).append(" ");
-//        }
         for (int i = index; i < poliz.size(); i++) {
             outputPoliz.append(poliz.get(i).getLexName()).append(" ");
         }
