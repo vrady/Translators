@@ -1,7 +1,7 @@
 # Translators
-Laboratory work for "Linguistic CAD -1"
+Course work for "Linguistic CAD". Java SE, IntelliJ IDEA 2017, JavaFX
 
 1. Construct a lexical analyzer for a given language specified by
-2. Build a syntactic analyzer top-down parsing
-3. Build a syntactic analyzer machine on the basis of the memory of store
-4. Build a ratio precedence for a given language.
+2. Build a syntactic analyzer machine on the basis of the memory of store
+3. Generate Reverse Polish notation (RPN)
+4. Execute Reverse Polish notation (RPN)
