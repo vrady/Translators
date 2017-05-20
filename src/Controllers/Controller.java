@@ -309,6 +309,8 @@ public class Controller implements Initializable {
                 table2.getItems().clear();
                 table3.getItems().clear();
                 tableSynt.getItems().clear();
+                polizProcess.getItems().clear();
+                polizProcess1.getItems().clear();
                 text1.setText("Line for exceptions in Lexical Analyzer");
                 text2.setText("Line for exceptions in Syntax Analyzer");
                 text3.setText("Line for exceptions in POLIZ");
@@ -318,6 +320,20 @@ public class Controller implements Initializable {
                     try {
                         SyntaxAnalyzer syntaxAnalyzer = new SyntaxAnalyzer(analyzer);
                         initData4(syntaxAnalyzer.getPdaLexemes());
+                        reversePolishNotationGenerator = new ReversePolishNotationGenerator(analyzer.getLexemes());
+                        polizArea.setText(reversePolishNotationGenerator.generatePoliz());
+                        initData6(reversePolishNotationGenerator.getPolizProcessing());
+                        ReversePolishNotationExecution reversePolishNotationExecution = new ReversePolishNotationExecution(reversePolishNotationGenerator);
+                        try {
+                            reversePolishNotationExecution.runProgram();
+                            initData7(reversePolishNotationExecution.getPolizExecutions());
+                            polizProcess1.setItems(userData6);
+                        } catch (Exception e) {
+                            text3.setText(e.getMessage());
+                            e.printStackTrace();
+                        }
+                        polizArea1.setText(reversePolishNotationExecution.getSolvedPoliz());
+                        polizProcess.setItems(userData5);
                     } catch (Exception e) {
                         text2.setText(e.getMessage());
                     }
@@ -327,38 +343,39 @@ public class Controller implements Initializable {
                 } catch (Exception e) {
                     text1.setText(e.getMessage());
                 }
+
                 table1.setItems(userData);
                 table2.setItems(userData1);
                 table3.setItems(userData2);
                 tableSynt.setItems(userData3);
             }
         });
-        polizButton.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
-            @Override
-            public void handle(javafx.event.ActionEvent event) {
-                polizProcess.getItems().clear();
-                reversePolishNotationGenerator = new ReversePolishNotationGenerator(analyzer.getLexemes());
-                polizArea.setText(reversePolishNotationGenerator.generatePoliz());
-                initData6(reversePolishNotationGenerator.getPolizProcessing());
-                polizProcess.setItems(userData5);
-            }
-        });
-        polizButton1.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
-            @Override
-            public void handle(javafx.event.ActionEvent event) {
-                polizProcess1.getItems().clear();
-                ReversePolishNotationExecution reversePolishNotationExecution = new ReversePolishNotationExecution(reversePolishNotationGenerator);
-                try {
-                    reversePolishNotationExecution.runProgram();
-                    initData7(reversePolishNotationExecution.getPolizExecutions());
-                    polizProcess1.setItems(userData6);
-                } catch (Exception e) {
-                    text3.setText(e.getMessage());
-                    e.printStackTrace();
-                }
-                polizArea1.setText(reversePolishNotationExecution.getSolvedPoliz());
-            }
-        });
+//        polizButton.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
+//            @Override
+//            public void handle(javafx.event.ActionEvent event) {
+//                polizProcess.getItems().clear();
+//                reversePolishNotationGenerator = new ReversePolishNotationGenerator(analyzer.getLexemes());
+//                polizArea.setText(reversePolishNotationGenerator.generatePoliz());
+//                initData6(reversePolishNotationGenerator.getPolizProcessing());
+//                polizProcess.setItems(userData5);
+//            }
+//        });
+//        polizButton1.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
+//            @Override
+//            public void handle(javafx.event.ActionEvent event) {
+//                polizProcess1.getItems().clear();
+//                ReversePolishNotationExecution reversePolishNotationExecution = new ReversePolishNotationExecution(reversePolishNotationGenerator);
+//                try {
+//                    reversePolishNotationExecution.runProgram();
+//                    initData7(reversePolishNotationExecution.getPolizExecutions());
+//                    polizProcess1.setItems(userData6);
+//                } catch (Exception e) {
+//                    text3.setText(e.getMessage());
+//                    e.printStackTrace();
+//                }
+//                polizArea1.setText(reversePolishNotationExecution.getSolvedPoliz());
+//            }
+//        });
         saveButton.setOnAction(new EventHandler<javafx.event.ActionEvent>() {
             @Override
             public void handle(javafx.event.ActionEvent event) {

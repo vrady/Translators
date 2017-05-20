@@ -13,36 +13,64 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="715.0" prefWidth="1139.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controllers.Controller">
     <children>
-      <TextArea fx:id="textarea" layoutX="14.0" layoutY="55.0" prefHeight="338.0" prefWidth="275.0" wrapText="true" />
-      <Button fx:id="runButton" layoutX="14.0" layoutY="404.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="251.0" text="Виконати">
-         <font>
-            <Font size="14.0" />
-         </font></Button>
-      <Button fx:id="openButton" layoutX="14.0" layoutY="13.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="115.0" text="Вікдрити файл">
-         <font>
-            <Font size="12.0" />
-         </font></Button>
-      <Button fx:id="saveButton" layoutX="172.0" layoutY="13.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="115.0" text="Зберегти файл">
-         <font>
-            <Font size="12.0" />
-         </font></Button>
-      <Label layoutX="14.0" layoutY="448.0" prefHeight="35.0" prefWidth="190.0" text="Лексичні помилки:">
-         <font>
-            <Font size="18.0" />
-         </font></Label>
-      <Text fx:id="text1" layoutX="20.0" layoutY="496.0" strokeType="OUTSIDE" strokeWidth="0.0" text="None Lexical Exception" wrappingWidth="218.13671875" />
-      <Text fx:id="text2" layoutX="15.0" layoutY="564.0" strokeType="OUTSIDE" strokeWidth="0.0" text="None Syntax Exception" wrappingWidth="200.0" />
-      <Label layoutX="14.0" layoutY="527.0" prefHeight="27.0" prefWidth="200.0" text="Синтаксичні помилки:">
-         <font>
-            <Font size="18.0" />
-         </font></Label>
-      <TabPane layoutX="300.0" prefHeight="715.0" prefWidth="840.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="300.0" AnchorPane.rightAnchor="-1.0" AnchorPane.topAnchor="0.0">
+      <TabPane layoutX="1.0" prefHeight="715.0" prefWidth="1139.0" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="1.0" AnchorPane.rightAnchor="-1.0" AnchorPane.topAnchor="0.0">
         <tabs>
+            <Tab text="Головна">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <Button fx:id="openButton" layoutX="25.0" layoutY="22.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="115.0" text="Вікдрити файл">
+                           <font>
+                              <Font size="12.0" />
+                           </font>
+                        </Button>
+                        <Button fx:id="saveButton" layoutX="162.0" layoutY="22.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="115.0" text="Зберегти файл">
+                           <font>
+                              <Font size="12.0" />
+                           </font>
+                        </Button>
+                        <TextArea fx:id="textarea" layoutX="25.0" layoutY="71.0" prefHeight="269.0" prefWidth="1083.0" wrapText="true" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="25.0">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </TextArea>
+                        <Button fx:id="runButton" layoutX="293.0" layoutY="22.0" mnemonicParsing="false" prefHeight="35.0" prefWidth="275.0" text="Виконати">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </Button>
+                        <TextArea fx:id="polizArea1" editable="false" layoutX="25.0" layoutY="366.0" prefHeight="310.0" prefWidth="762.0" wrapText="true" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="352.0" AnchorPane.topAnchor="366.0">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                        </TextArea>
+                        <Label layoutX="895.0" layoutY="366.0" prefHeight="35.0" prefWidth="190.0" text="Лексичні помилки:" AnchorPane.rightAnchor="54.0">
+                           <font>
+                              <Font size="18.0" />
+                           </font>
+                        </Label>
+                        <Text fx:id="text1" layoutX="830.0" layoutY="414.0" strokeType="OUTSIDE" strokeWidth="0.0" text="None Lexical Exception" wrappingWidth="218.13671875" AnchorPane.rightAnchor="25.0" />
+                        <Label layoutX="895.0" layoutY="454.0" prefHeight="27.0" prefWidth="200.0" text="Синтаксичні помилки:" AnchorPane.rightAnchor="44.0">
+                           <font>
+                              <Font size="18.0" />
+                           </font>
+                        </Label>
+                        <Text fx:id="text2" layoutX="895.0" layoutY="494.0" strokeType="OUTSIDE" strokeWidth="0.0" text="None Syntax Exception" wrappingWidth="200.0" AnchorPane.rightAnchor="44.0" />
+                        <Label layoutX="820.0" layoutY="542.0" prefHeight="27.0" prefWidth="269.0" text="Помилки при виконанні ПОЛІЗ:" AnchorPane.rightAnchor="25.0">
+                           <font>
+                              <Font size="18.0" />
+                           </font>
+                        </Label>
+                        <Text fx:id="text3" layoutX="895.0" layoutY="582.0" strokeType="OUTSIDE" strokeWidth="0.0" text="None POLIZ Exeption" wrappingWidth="200.0" AnchorPane.rightAnchor="44.0" />
+                     </children>
+                  </AnchorPane>
+              </content>
+            </Tab>
           <Tab text="Лексичний аналіз">
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                          <TableView fx:id="table1" layoutY="37.0" prefHeight="649.0" prefWidth="432.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="37.0">
+                          <TableView fx:id="table1" layoutY="37.0" prefHeight="639.0" prefWidth="409.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="25.0" AnchorPane.topAnchor="37.0">
                               <columns>
                                   <TableColumn fx:id="column11" prefWidth="27.0" text="№" />
                                   <TableColumn fx:id="column12" prefWidth="79.0" text="№ рядка" />
@@ -51,25 +79,20 @@
                                   <TableColumn fx:id="column15" prefWidth="88.0" text="Код idn/con" />
                               </columns>
                           </TableView>
-                          <TableView fx:id="table2" layoutX="432.0" layoutY="37.0" prefHeight="303.0" prefWidth="408.0" AnchorPane.leftAnchor="432.0" AnchorPane.rightAnchor="0.0">
+                          <TableView fx:id="table2" layoutX="442.0" layoutY="37.0" prefHeight="303.0" prefWidth="672.0" AnchorPane.leftAnchor="444.0" AnchorPane.rightAnchor="25.0">
                               <columns>
                                   <TableColumn fx:id="column21" prefWidth="96.0" text="Код" />
                                   <TableColumn fx:id="column22" prefWidth="170.0" text="ID" />
                                   <TableColumn fx:id="column23" prefWidth="126.0" text="Тип" />
                               </columns>
                           </TableView>
-                          <TableView fx:id="table3" layoutX="433.0" layoutY="366.0" prefHeight="314.0" prefWidth="407.0" AnchorPane.leftAnchor="432.0" AnchorPane.rightAnchor="0.0">
+                          <TableView fx:id="table3" layoutX="444.0" layoutY="366.0" prefHeight="314.0" prefWidth="670.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="444.0" AnchorPane.rightAnchor="25.0">
                               <columns>
                                   <TableColumn fx:id="column31" prefWidth="146.0" text="Код" />
                                   <TableColumn fx:id="column32" prefWidth="251.0" text="Лексема" />
                               </columns>
                           </TableView>
                           <Label layoutX="584.0" layoutY="14.0" prefHeight="23.0" prefWidth="133.0" text="Ідентифікатори">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Label>
-                          <Label layoutX="595.0" layoutY="343.0" prefHeight="23.0" prefWidth="82.0" text="Константи">
                            <font>
                               <Font size="14.0" />
                            </font>
@@ -87,7 +110,7 @@
             <content>
               <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <TableView fx:id="tableSynt" prefHeight="363.0" prefWidth="840.0" AnchorPane.bottomAnchor="323.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <TableView fx:id="tableSynt" prefHeight="363.0" prefWidth="840.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="10.0">
                           <columns>
                               <TableColumn fx:id="columnLine" prefWidth="47.0" text="№" />
                             <TableColumn fx:id="columnSynt" prefWidth="316.0" text="Вхідна лексема" />
@@ -95,7 +118,7 @@
                               <TableColumn fx:id="columnStack" prefWidth="227.0" text="Стек" />
                           </columns>
                         </TableView>
-                        <TableView fx:id="tablePDA" layoutY="325.0" prefHeight="361.0" prefWidth="840.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="325.0">
+                        <TableView fx:id="tablePDA" layoutY="325.0" prefHeight="361.0" prefWidth="840.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="315.0">
                           <columns>
                             <TableColumn fx:id="alpha" prefWidth="81.0" text="a" />
                             <TableColumn fx:id="metka" prefWidth="119.0" text="мітка" />
@@ -113,39 +136,23 @@
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                      <children>
-                        <TextArea fx:id="polizArea" layoutX="12.0" layoutY="104.0" prefHeight="233.0" prefWidth="332.0" wrapText="true" />
-                        <Label layoutX="98.0" layoutY="81.0" prefHeight="23.0" prefWidth="199.0" text="Згенерований ПОЛІЗ">
+                        <TextArea fx:id="polizArea" layoutX="25.0" layoutY="37.0" prefHeight="356.0" prefWidth="332.0" wrapText="true" AnchorPane.leftAnchor="25.0" AnchorPane.topAnchor="39.0" />
+                        <Label layoutX="121.0" layoutY="3.0" prefHeight="23.0" prefWidth="141.0" text="Згенерований ПОЛІЗ">
                            <font>
                               <Font size="14.0" />
                            </font>
                         </Label>
-                        <Button fx:id="polizButton" layoutX="13.0" layoutY="14.0" mnemonicParsing="false" prefHeight="53.0" prefWidth="330.0" text="Генерувати ПОЛІЗ">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Button>
-                        <TableView fx:id="polizProcess" layoutX="430.0" prefHeight="395.0" prefWidth="473.0" AnchorPane.bottomAnchor="291.0" AnchorPane.leftAnchor="367.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                        <TableView fx:id="polizProcess" layoutX="430.0" prefHeight="385.0" prefWidth="747.0" AnchorPane.leftAnchor="367.0" AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="10.0">
                           <columns>
                             <TableColumn fx:id="inputPoliz" prefWidth="104.0" text="Вхідна лексема" />
                             <TableColumn fx:id="stackPoliz" prefWidth="155.0" text="Стек" />
                               <TableColumn fx:id="outputPoliz" prefWidth="206.0" text="ПОЛІЗ" />
                           </columns>
                         </TableView>
-                        <TextArea fx:id="polizArea1" layoutX="12.0" layoutY="432.0" prefHeight="247.0" prefWidth="332.0" wrapText="true" />
-                        <Label layoutX="113.0" layoutY="409.0" prefHeight="23.0" prefWidth="199.0" text="Виконаний ПОЛІЗ">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Label>
-                        <Button fx:id="polizButton1" layoutX="13.0" layoutY="343.0" mnemonicParsing="false" prefHeight="53.0" prefWidth="330.0" text="Виконати ПОЛІЗ">
-                           <font>
-                              <Font size="14.0" />
-                           </font>
-                        </Button>
-                        <TableView fx:id="polizProcess1" layoutX="368.0" layoutY="421.0" prefHeight="265.0" prefWidth="472.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="368.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="421.0">
+                        <TableView fx:id="polizProcess1" layoutY="403.0" prefHeight="283.0" prefWidth="840.0" AnchorPane.bottomAnchor="10.0" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="25.0" AnchorPane.topAnchor="403.0">
                            <columns>
                               <TableColumn fx:id="stackPoliz1" prefWidth="239.0" text="Стек" />
-                              <TableColumn fx:id="outputPoliz1" prefWidth="224.0" text="ПОЛІЗ" />
+                              <TableColumn fx:id="outputPoliz1" prefWidth="587.0" text="ПОЛІЗ" />
                            </columns>
                         </TableView>
                      </children>
@@ -154,11 +161,5 @@
             </Tab>
         </tabs>
       </TabPane>
-      <Label layoutX="15.0" layoutY="585.0" prefHeight="27.0" prefWidth="269.0" text="Помилки при виконанні ПОЛІЗ:">
-         <font>
-            <Font size="18.0" />
-         </font>
-      </Label>
-      <Text fx:id="text3" layoutX="20.0" layoutY="625.0" strokeType="OUTSIDE" strokeWidth="0.0" text="None Syntax Exception" wrappingWidth="200.0" />
     </children>
 </AnchorPane>

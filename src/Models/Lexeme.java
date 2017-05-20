@@ -25,12 +25,6 @@ public class Lexeme {
         this.lexName = value.toString();
     }
 
-    public Lexeme(String commonLexName, String lexName, Double value){
-        this.commonLexName = commonLexName;
-        this.value = value;
-        this.lexName = lexName;
-    }
-
     public Lexeme(String commonLexName, boolean value){
         this.commonLexName = commonLexName;
         this.booleanValue = value;

@@ -5,7 +5,6 @@ import Models.Identificators;
 import Models.Lexeme;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -19,44 +18,31 @@ import java.util.TreeSet;
 public class LexicalAnalyzer {
 
     private ArrayList<Double> constants;
-
     private ArrayList<String> ids;
-
     private ArrayList<Lexeme> lexemes;
-
     private ArrayList<Identificators> identificators = new ArrayList<>();
-
     private ArrayList<Constants> constantses = new ArrayList<>();
-
     private String idState;
-
     private StringBuilder currentLexeme;
-
     public ArrayList<Constants> getConstantses() {
         return this.constantses;
     }
-
     public ArrayList<Identificators> getIdentificators() {
         return this.identificators;
     }
     public ArrayList<Double> getConstants() {
         return this.constants;
     }
-
     public ArrayList<String> getIds() {
         return this.ids;
     }
-
     public ArrayList<Lexeme> getLexemes() {
         return this.lexemes;
     }
-
     private int line;
     private int constantsCounter = 0;
     private int idCounter = 0;
-
     private boolean varmode;
-
     private final static HashMap<String, Integer> lexemesTable = new HashMap<>();
 
     static {
@@ -179,52 +165,50 @@ public class LexicalAnalyzer {
     }
 
     private void addNumber() {
-        String lexem = currentLexeme.toString();
-        double num = Double.parseDouble(lexem);
+        String lexeme = currentLexeme.toString();
+        double num = Double.parseDouble(lexeme);
         if (!constants.contains(num)) {
             constants.add(num);
             constantsCounter++;
             constantses.add(new Constants(constantsCounter,num));
         }
-//        lexemes.add(Lexeme.сonstant(this.line, constants.lastIndexOf(num)));
         lexemes.add(new Lexeme(this.line, 38, Double.toString(num), "con", constants.lastIndexOf(num), -1));
         currentLexeme = new StringBuilder();
     }
 
     private void addVar() {
-        String lexem = currentLexeme.toString();
-        if (lexem.equals("{")) {
+        String lexeme = currentLexeme.toString();
+        if (lexeme.equals("{")) {
             varmode = false;
             addNewLexem();
             return;
         }
-        if (lexem.equals("int")) {
+        if (lexeme.equals("int")) {
             idState = "int";
             addNewLexem();
             return;
         }
-        if (lexem.equals("real")) {
+        if (lexeme.equals("real")) {
             idState = "real";
             addNewLexem();
             return;
         }
-        if (lexemesTable.containsKey(lexem)) {
+        if (lexemesTable.containsKey(lexeme)) {
             throw new IllegalArgumentException("A variable can not be a reserved word\nNumber of line: " + this.line);
         }
-        if (ids.contains(lexem)) {
+        if (ids.contains(lexeme)) {
             throw new IllegalArgumentException("A variable can not be declared twice\nNumber of line: " + this.line);
         }
         idCounter++;
-        identificators.add(new Identificators(idCounter, idState, lexem));
-        ids.add(lexem);
-//        lexemes.add(Lexeme.id(this.line, ids.indexOf(lexem)));
-        lexemes.add(new Lexeme(this.line, 37, lexem, "idn", -1, ids.indexOf(lexem)));
+        identificators.add(new Identificators(idCounter, idState, lexeme));
+        ids.add(lexeme);
+        lexemes.add(new Lexeme(this.line, 37, lexeme, "idn", -1, ids.indexOf(lexeme)));
         currentLexeme = new StringBuilder();
     }
 
     private void addNewLexem() {
-        String lexem = currentLexeme.toString();
-        if (lexem.equals("var")) {
+        String lexeme = currentLexeme.toString();
+        if (lexeme.equals("var")) {
             varmode = true;
         }
         if (lexemes.size() != 0 && (Objects.equals(lexemes.get(lexemes.size() - 1).getLex(), lexemesTable.get("program")))) {
@@ -232,21 +216,17 @@ public class LexicalAnalyzer {
             addVar();
             return;
         }
-        //перевірка чи лексема
-        if (lexemesTable.containsKey(lexem)) {
-//            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(lexem)));
-            lexemes.add(new Lexeme(this.line, lexemesTable.get(lexem), lexem, lexem, -1, -1));
+        if (lexemesTable.containsKey(lexeme)) {
+            lexemes.add(new Lexeme(this.line, lexemesTable.get(lexeme), lexeme, lexeme, -1, -1));
             currentLexeme = new StringBuilder();
             return;
         }
-        //перевірка чи ідентифікатор
-        if (ids.contains(lexem)) {
-//            lexemes.add(Lexeme.id(this.line, ids.indexOf(lexem)));
-            lexemes.add(new Lexeme(this.line, 37, lexem, "idn", -1, ids.indexOf(lexem)));
+        if (ids.contains(lexeme)) {
+            lexemes.add(new Lexeme(this.line, 37, lexeme, "idn", -1, ids.indexOf(lexeme)));
             currentLexeme = new StringBuilder();
             return;
         }
-        throw new IllegalArgumentException("Unknown lexeme: " + lexem + "\nNumber of line: " + this.line);
+        throw new IllegalArgumentException("Unknown lexeme: " + lexeme + "\nNumber of line: " + this.line);
     }
 
     public LexicalAnalyzer(String text) {
@@ -258,10 +238,10 @@ public class LexicalAnalyzer {
         lexemes = new ArrayList<>();
         varmode = false;
         this.line = 1;
-        Analyze(text);
+        analyze(text);
     }
 
-    private void Analyze(String text) {
+    private void analyze(String text) {
         currentLexeme = new StringBuilder();
         int mode = 1;
         for (int i = 0; i < text.length(); i++) {
@@ -305,14 +285,12 @@ public class LexicalAnalyzer {
         return -1;
     }
 
-    // initial state
     private int mode1(char l) {
         if (isCurrentCharacter(l)) {
             currentLexeme.append(l);
             return 2;
         }
         if (l == '+' || l == '-') {
-            //lexemes.add(Models.Lexeme.reservedWord(this.line, lexemesTable.get(Character.toString(l))));
             currentLexeme.append(l);
             return 3;
         }
@@ -341,10 +319,8 @@ public class LexicalAnalyzer {
                 if (l == '{') {
                     varmode = false;
                 }
-//                lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(Character.toString(l))));
                 lexemes.add(new Lexeme(this.line, lexemesTable.get(Character.toString(l)), Character.toString(l), Character.toString(l), -1, -1));
             } else if (l == '\n') {
-//                lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(Character.toString(l))));
                 lexemes.add(new Lexeme(this.line, lexemesTable.get(Character.toString(l)), Character.toString(l), Character.toString(l), -1, -1));
                 this.line++;
             }
@@ -353,7 +329,6 @@ public class LexicalAnalyzer {
         throw new IllegalArgumentException("Unknown symbol: " + l + "\nNumber of line: " + this.line);
     }
 
-    // letter-digit (ID)
     private int mode2(char l) {
         if (isCurrentCharacter(l) || Character.isDigit(l)) {
             currentLexeme.append(l);
@@ -367,7 +342,6 @@ public class LexicalAnalyzer {
         return mode1(l);
     }
 
-    //+-
     private int mode3(char l) {
         if (Character.isDigit(l) && (!lexemes.get(lexemes.size()-1).isExprFinish())) {
             currentLexeme.append(l);
@@ -381,7 +355,6 @@ public class LexicalAnalyzer {
         return mode1(l);
     }
 
-    // digit (cons)
     private int mode4(char l) {
         if (Character.isDigit(l)) {
             currentLexeme.append(l);
@@ -399,7 +372,6 @@ public class LexicalAnalyzer {
         return mode1(l);
     }
 
-    //
     private int mode5(char l) {
         if (Character.isDigit(l)) {
             currentLexeme.append(l);
@@ -409,7 +381,6 @@ public class LexicalAnalyzer {
         return mode1(l);
     }
 
-    //.
     private int mode6(char l) {
         if (Character.isDigit(l)) {
             currentLexeme.append(l);
@@ -419,101 +390,40 @@ public class LexicalAnalyzer {
         }
     }
 
-    //<
     private int mode7(char l) {
         if (l == '=') {
-//            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("<=")));
             lexemes.add(new Lexeme(this.line, lexemesTable.get("<="), "<=", "<=", -1, -1));
             return 1;
         }
-//        lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("<")));
         lexemes.add(new Lexeme(this.line, lexemesTable.get("<"), "<", "<", -1, -1));
         return mode1(l);
     }
 
-    //>
     private int mode8(char l) {
         if (l == '=') {
-//            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(">=")));
             lexemes.add(new Lexeme(this.line, lexemesTable.get(">="), ">=", ">=", -1, -1));
             return 1;
         }
-//        lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get(">")));
         lexemes.add(new Lexeme(this.line, lexemesTable.get(">"), ">", ">", -1, -1));
         return mode1(l);
     }
 
-    //=
     private int mode9(char l) {
         if (l == '=') {
-//            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("==")));
             lexemes.add(new Lexeme(this.line, lexemesTable.get("=="), "==", "==", -1, -1));
             return 1;
         }
-//        lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("=")));
         lexemes.add(new Lexeme(this.line, lexemesTable.get("="), "=", "=", -1, -1));
         return mode1(l);
     }
 
-    //!
     private int mode10(char l) {
         if (l == '=') {
-//            lexemes.add(Lexeme.reservedWord(this.line, lexemesTable.get("!=")));
             lexemes.add(new Lexeme(this.line, lexemesTable.get("!="), "!=", "!=", -1, -1));
             return 1;
         } else {
             throw new IllegalArgumentException("! is not the delimiter\nNumber of line: " + this.line);
         }
-    }
-
-    public static void main(String argv[]) {
-        String file = readFile();
-        LexicalAnalyzer analyzer = new LexicalAnalyzer(file);
-        output(analyzer);
-        System.out.println(analyzer.getConstantses());
-    }
-
-    private static void output(LexicalAnalyzer analyzer) {
-        ArrayList<Double> listConstants = analyzer.getConstants();
-        ArrayList<String> listIds = analyzer.getIds();
-        System.out.println("___________Output table of lexemes________________");
-        ArrayList<Lexeme> listLexem1 = analyzer.getLexemes();
-        System.out.println("   №|  line|   lex|        lexem    |     id/con|");
-        System.out.println("--------------------------------------------------");
-        int counter = 1;
-        for (Lexeme p : listLexem1) {
-            System.out.printf("%4d | %4d | %4d |", counter, p.getLine(), p.getLex());
-            counter++;
-            if (p.isConstant()) {
-                System.out.printf(" %15s |", listConstants.get(p.getCon()));
-                System.out.printf("      %4d |", (p.getCon() + 1));
-            } else if (p.isId()) {
-                System.out.printf(" %15s |", listIds.get(p.getId()));
-                System.out.printf("      %4d |", (p.getId() + 1));
-            } else if (analyzer.isDelimiter(LexicalAnalyzer.lexemesArray[p.getLex()].charAt(0))) {
-                System.out.printf(" %15s |", LexicalAnalyzer.lexemesArray[p.getLex()]);
-                if (LexicalAnalyzer.lexemesArray[p.getLex()].equals("¶")) {
-                    System.out.printf("  delimiter|");
-                } else {
-                    System.out.printf("           |");
-                }
-            } else {
-                System.out.printf(" %15s |", LexicalAnalyzer.lexemesArray[p.getLex()]);
-                System.out.printf("           |");
-            }
-            System.out.println();
-        }
-        System.out.println();
-        System.out.println("Models.Constants:");
-        for (int i = 0; i < listConstants.size(); i++) {
-            System.out.println((i + 1) + " |" + listConstants.get(i));
-        }
-        System.out.println();
-        System.out.println("ID:");
-        for (int i = 0; i < listIds.size(); i++) {
-            System.out.println((i + 1) + " |" + listIds.get(i));
-        }
-        System.out.println();
     }
 
     static String readFile(){
@@ -522,8 +432,6 @@ public class LexicalAnalyzer {
             byte[] b = new byte[stream.available()];
             stream.read(b);
             file = new String(b);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

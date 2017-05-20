@@ -21,10 +21,6 @@ public class ReversePolishNotationExecution {
         return polizExecutions;
     }
 
-    public Map<String, Double> getIds() {
-        return ids;
-    }
-
     public ReversePolishNotationExecution(ReversePolishNotationGenerator reversePolishNotationGenerator) {
         this.poliz = reversePolishNotationGenerator.getPoliz();
         this.identificators = reversePolishNotationGenerator.getLabels();
@@ -86,8 +82,11 @@ public class ReversePolishNotationExecution {
         }
     }
 
-    private void outputData(Lexeme lexeme) {
-        solvedPoliz += ids.get(lexeme.getLexName()).toString() + "\n";
+    private void outputData(Lexeme lexeme) throws Exception {
+        if (ids.get(lexeme.getLexName()) == null) {
+            throw new Exception("Змінна " + lexeme.getLexName() + " не ініціалізована");
+        }
+        solvedPoliz += lexeme.getLexName() + " = " + ids.get(lexeme.getLexName()).toString() + "\n";
     }
 
     private Double inputData(Lexeme lexeme) {
@@ -121,38 +120,20 @@ public class ReversePolishNotationExecution {
                 return new Lexeme("solvedAnd", true);
             } else return new Lexeme("solvedAnd", false);
         }
-        if (operator.getLex() == 24) {
-            return new Lexeme("solvedSum", first.getValue() + second.getValue());
-        }
-        if (operator.getLex() == 25) {
-            return new Lexeme("solvedMinus", first.getValue() - second.getValue());
-        }
-        if (operator.getLex() == 26) {
-            return new Lexeme("solvedMul", first.getValue() * second.getValue());
-        }
-        if (operator.getLex() == 27) {
-            return new Lexeme("solvedDiv", first.getValue() / second.getValue());
-        }
-        if (operator.getLex() == 31) {
-            return new Lexeme("solvedLess", first.getValue() < second.getValue());
-        }
-        if (operator.getLex() == 32) {
-            return new Lexeme("solvedMore", first.getValue() > second.getValue());
-        }
-        if (operator.getLex() == 33) {
-            return new Lexeme("solvedLessEqual", first.getValue() <= second.getValue());
-        }
-        if (operator.getLex() == 34) {
-            return new Lexeme("solvedMoreEqual", first.getValue() >= second.getValue());
-        }
-        if (operator.getLex() == 35) {
-            return new Lexeme("solvedEqual", Objects.equals(first.getValue(), second.getValue()));
-        }
-        if (operator.getLex() == 36) {
-            return new Lexeme("solvedNotEqual", !Objects.equals(first.getValue(), second.getValue()));
-        }
 
-        return null;
+        switch (operator.getLex()) {
+            case 24: return new Lexeme("solvedSum", first.getValue() + second.getValue());
+            case 25: return new Lexeme("solvedMinus", first.getValue() - second.getValue());
+            case 26: return new Lexeme("solvedMul", first.getValue() * second.getValue());
+            case 27: return new Lexeme("solvedDiv", first.getValue() / second.getValue());
+            case 31: return new Lexeme("solvedLess", first.getValue() < second.getValue());
+            case 32: return new Lexeme("solvedMore", first.getValue() > second.getValue());
+            case 33: return new Lexeme("solvedLessEqual", first.getValue() <= second.getValue());
+            case 34: return new Lexeme("solvedMoreEqual", first.getValue() >= second.getValue());
+            case 35: return new Lexeme("solvedEqual", Objects.equals(first.getValue(), second.getValue()));
+            case 36: return new Lexeme("solvedNotEqual", !Objects.equals(first.getValue(), second.getValue()));
+            default: return  null;
+        }
     }
 
     private void checkIds(Lexeme first, Lexeme second) {
